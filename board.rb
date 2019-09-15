@@ -6,12 +6,16 @@ class Board
   end
 
   def set_value(x, y, value)
-    index = (9 * y + x)
+    index = coords_to_index(x, y)
     cells[index] = value
   end
 
   def cell_value(x, y)
     rows[y][x]
+  end
+
+  def coords_to_index(x, y)
+    (9 * y + x)
   end
 
   def rows
