@@ -33,22 +33,16 @@ class Board
   def squares
     squares = [[],[],[],[],[],[],[],[],[]]
     square_index = 0
-    row_index = 0
-    num_index = 0
-    9.times do
+    rows.each_slice(3).each do |trio|
+      cell_index = 0
       3.times do
-        squares[square_index] << rows[row_index].slice(num_index..num_index + 2)
-        row_index += 1
+        trio.each do |row|
+          squares[square_index] << row.slice(cell_index..cell_index + 2)
+        end
+        squares[square_index].flatten!
+        square_index += 1
+        cell_index += 3
       end
-
-      squares[square_index].flatten!
-      square_index += 1
-
-      num_index < 5 ? num_index += 3 : num_index = 0
-
-      row_index = 0
-      row_index = 3 if square_index > 2
-      row_index = 6 if square_index > 5
     end
 
     squares
