@@ -65,6 +65,7 @@ rspec solver_spec.rb
 ```
 
 ### Aspirations
+- Update Solver#fill_in method to be able to fill in a single cell if given coordinates
 - Evolve to solve harder sudokus with more complex analytical tactics
 - Create browser frontend
   - Interactive user interface
