@@ -32,22 +32,16 @@ class Solver
   end
 
   def analyze_row(x, y)
-    possibilities = board.rows[y]
-    possibilities&.delete(0)
-    possibilities
+    board.rows[y].tap {|row| row.delete(0)}
   end
 
   def analyze_column(x, y)
-    possibilities = board.columns[x]
-    possibilities&.delete(0)
-    possibilities
+    board.columns[x].tap {|column| column.delete(0)}
   end
 
   def analyze_square(x, y)
     sq = determine_square(x, y)
-    possibilities = board.squares[sq]
-    possibilities&.delete(0)
-    possibilities
+    board.squares[sq].tap {|square| square.delete(0)}
   end
 
   def determine_square(x, y)
