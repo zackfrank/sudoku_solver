@@ -66,6 +66,9 @@ rspec solver_spec.rb
 
 ### Aspirations
 - Evolve to solve harder sudokus with more complex analytical tactics
+  - Note to self: analyze possibilities in other cells of the same row/column/square
+    - If the number of cells with matching lists of possibilities matches the number of possibilities, those possibilities can be removed from other cells' lists of possibilities within the same row/column/square
+      - ex. if both cell A and cell B can only be `[1, 2]`, then cell C in the same row/column/square can not include those possibilities
 - Create browser frontend
   - Interactive user interface
   - User can choose to be shown hints for individual cells
