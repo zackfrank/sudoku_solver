@@ -48,6 +48,39 @@ class Board
     squares
   end
 
+  def row_contents(y)
+    rows[y].tap {|row| row.delete(0)}
+  end
+
+  def column_contents(x)
+    columns[x].tap {|column| column.delete(0)}
+  end
+
+  def square_contents(x, y)
+    sq = determine_square(x, y)
+    squares[sq].tap {|square| square.delete(0)}
+  end
+
+  def determine_square(x, y)
+    return 0 if y < 3 && x < 3
+    return 1 if y < 3 && x < 6
+    return 2 if y < 3
+    return 3 if y < 6 && x < 3
+    return 4 if y < 6 && x < 6
+    return 5 if y < 6
+    return 6 if x < 3
+    return 7 if x < 6
+    return 8
+  end
+
+  def cell_possibilities(x, y)
+    [*1..9] - (
+      row_contents(y) |
+      column_contents(x) |
+      square_contents(x, y)
+    )
+  end
+
   def print_rows
     rows.each { |row| p row }
   end
