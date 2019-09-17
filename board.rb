@@ -86,11 +86,11 @@ class Board
   end
 
   def cell_possibilities(x, y)
-    [*1..9] - (
-      row_contents(y) |
-      column_contents(x) |
-      square_contents(x, y)
-    )
+    [*1..9] - neighbor_contents(x, y)
+  end
+
+  def neighbor_contents(x, y)
+    row_contents(y) | column_contents(x) | square_contents(x, y)
   end
 
   def print_rows
