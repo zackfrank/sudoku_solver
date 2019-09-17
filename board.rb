@@ -1,5 +1,5 @@
 class Board
-  attr_accessor :cells, :columns, :rows
+  attr_accessor :cells
   # validate cells.length == 81
 
   def initialize(cells:)
@@ -19,19 +19,21 @@ class Board
     (9 * y + x)
   end
 
-  def rows
-    @rows ||= construct_rows
-  end
+  # def rows
+  #   @rows ||= construct_rows
+  # end
 
-  def construct_rows
+  # def construct_rows
+  def rows
     cells.each_slice(9).to_a
   end
 
-  def columns
-    @columns ||= construct_columns
-  end
+  # def columns
+  #   @columns ||= construct_columns
+  # end
 
-  def construct_columns
+  # def construct_columns
+  def columns
     columns = [[],[],[],[],[],[],[],[],[]]
     columns.each do |column|
       rows.each { |row| column << row[columns.find_index(column)] }
@@ -39,11 +41,12 @@ class Board
     columns
   end
 
-  def squares
-    @squares ||= construct_squares
-  end
+  # def squares
+  #   @squares ||= construct_squares
+  # end
 
-  def construct_squares
+  # def construct_squares
+  def squares
     squares = [[],[],[],[],[],[],[],[],[]]
     square_index = 0
     rows.each_slice(3).each do |trio|
@@ -86,11 +89,16 @@ class Board
   end
 
   def cell_possibilities(x, y)
+    return unless empty_cell(x, y)
     [*1..9] - neighbor_contents(x, y)
   end
 
   def neighbor_contents(x, y)
     row_contents(y) | column_contents(x) | square_contents(x, y)
+  end
+
+  def empty_cell(x, y)
+    cell_value(x, y) == 0
   end
 
   def print_rows
