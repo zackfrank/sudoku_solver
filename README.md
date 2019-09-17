@@ -65,7 +65,6 @@ rspec solver_spec.rb
 ```
 
 ### Aspirations
-- Update Solver#fill_in method to be able to fill in a single cell if given coordinates
 - Evolve to solve harder sudokus with more complex analytical tactics
   - Note to self: analyze possibilities in other cells of the same row/column/square
     - If the number of cells with matching lists of possibilities matches the number of possibilities, those possibilities can be removed from other cells' lists of possibilities within the same row/column/square
