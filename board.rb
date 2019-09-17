@@ -34,7 +34,7 @@ class Board
 
   # def construct_columns
   def columns
-    columns = [[],[],[],[],[],[],[],[],[]]
+    columns = [[], [], [], [], [], [], [], [], []]
     columns.each do |column|
       rows.each { |row| column << row[columns.find_index(column)] }
     end
@@ -47,7 +47,7 @@ class Board
 
   # def construct_squares
   def squares
-    squares = [[],[],[],[],[],[],[],[],[]]
+    squares = [[], [], [], [], [], [], [], [], []]
     square_index = 0
     rows.each_slice(3).each do |trio|
       cell_index = 0
@@ -64,16 +64,16 @@ class Board
   end
 
   def row_contents(y)
-    rows[y].tap {|row| row.delete(0)}
+    rows[y].tap { |row| row.delete(0) }
   end
 
   def column_contents(x)
-    columns[x].tap {|column| column.delete(0)}
+    columns[x].tap { |column| column.delete(0) }
   end
 
   def square_contents(x, y)
     sq = determine_square(x, y)
-    squares[sq].tap {|square| square.delete(0)}
+    squares[sq].tap { |square| square.delete(0) }
   end
 
   def determine_square(x, y)
@@ -90,6 +90,7 @@ class Board
 
   def cell_possibilities(x, y)
     return unless empty_cell(x, y)
+
     [*1..9] - neighbor_contents(x, y)
   end
 
@@ -98,7 +99,7 @@ class Board
   end
 
   def empty_cell(x, y)
-    cell_value(x, y) == 0
+    cell_value(x, y).zero?
   end
 
   def print_rows
@@ -114,16 +115,16 @@ class Board
   end
 end
 
-# b = Board.new(cells: 
+# b = Board.new(cells:
 #   [
-#     0, 0, 2, 1, 0, 8, 5, 0, 3, 
-#     0, 0, 0, 0, 2, 0, 9, 0, 7, 
-#     8, 0, 0, 3, 9, 0, 0, 0, 0, 
-#     3, 1, 7, 6, 0, 0, 0, 0, 0, 
-#     4, 6, 0, 0, 5, 0, 0, 7, 2, 
-#     0, 0, 0, 0, 0, 4, 8, 1, 6, 
-#     0, 0, 0, 0, 7, 3, 0, 0, 5, 
-#     5, 0, 6, 0, 1, 0, 0, 0, 0, 
+#     0, 0, 2, 1, 0, 8, 5, 0, 3,
+#     0, 0, 0, 0, 2, 0, 9, 0, 7,
+#     8, 0, 0, 3, 9, 0, 0, 0, 0,
+#     3, 1, 7, 6, 0, 0, 0, 0, 0,
+#     4, 6, 0, 0, 5, 0, 0, 7, 2,
+#     0, 0, 0, 0, 0, 4, 8, 1, 6,
+#     0, 0, 0, 0, 7, 3, 0, 0, 5,
+#     5, 0, 6, 0, 1, 0, 0, 0, 0,
 #     1, 0, 3, 5, 0, 6, 7, 0, 0
 #   ])
 

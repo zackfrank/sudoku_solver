@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'board.rb'
 
 class Solver
@@ -29,7 +31,7 @@ class Solver
 
     if possibilities.length == 1
       filled_in_board.set_value(x, y, possibilities[0])
-      change_count = 0
+      self.change_count = 0
     end
   end
 
@@ -57,11 +59,11 @@ class Solver
   end
 
   def coords_of_column_neighbors(x, y)
-    [*0..8].reject{ |n| n == y }.map {|y| [x, y] }
+    [*0..8].reject { |n| n == y }.map { |y| [x, y] }
   end
 
   def coords_of_row_neighbors(x, y)
-    [*0..8].reject{ |n| n == x }.map {|x| [x, y] }
+    [*0..8].reject { |n| n == x }.map { |x| [x, y] }
   end
 end
 
