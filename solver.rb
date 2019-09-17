@@ -13,7 +13,8 @@ class Solver
   def fill_in_board
     @filled_in_board ||= board.dup # rename to solution?
 
-    until change_count > 500
+    # allow a full cycle without solving if (0, 0) is last cell solved
+    until !filled_in_board.cells.include?(0) || change_count > 161
       [*0..8].each do |x|
         [*0..8].each do |y|
           solve_cell(x, y)
@@ -36,25 +37,13 @@ class Solver
   end
 
   def aggregate_possibilities(x, y)
-    column_possibilities = coords_of_column_neighbors(x, y).map do |coords|
-      filled_in_board.cell_possibilities(*coords)
-    end.compact
-    row_possibilities = coords_of_row_neighbors(x, y).map do |coords|
-      filled_in_board.cell_possibilities(*coords)
-    end.compact
+    column_possibilities = neighbor_possibilities(coords_of_column_neighbors(x, y))
+    row_possibilities = neighbor_possibilities(coords_of_row_neighbors(x, y))
 
     exclusions = []
-    column_possibilities.each do |possibilities|
-      if column_possibilities.count(possibilities) == possibilities.length
-        exclusions.concat(possibilities)
-      end
-    end
+    exclusions << neighbor_exclusions(column_possibilities)
+    exclusions << neighbor_exclusions(row_possibilities)
 
-    row_possibilities.each do |possibilities|
-      if row_possibilities.count(possibilities) == possibilities.length
-        exclusions.concat(possibilities)
-      end
-    end
     exclusions.uniq
   end
 
@@ -64,6 +53,18 @@ class Solver
 
   def coords_of_row_neighbors(x, y)
     [*0..8].reject { |n| n == x }.map { |x| [x, y] }
+  end
+
+  def neighbor_possibilities(coords_of_neighborhood)
+    coords_of_neighborhood.map do |coords|
+      filled_in_board.cell_possibilities(*coords)
+    end.compact
+  end
+
+  def neighbor_exclusions(neighbor_possibilities)
+    neighbor_possibilities.select do |possibilities|
+      neighbor_possibilities.count(possibilities) == possibilities.length
+    end
   end
 end
 
