@@ -1,7 +1,7 @@
 require_relative 'board.rb'
 
 RSpec.describe Board do
-  before(:all) do
+  before(:each) do
     @board = Board.new(cells: 
     [
       0, 0, 2, 1, 0, 8, 5, 0, 3, 

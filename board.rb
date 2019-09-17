@@ -1,5 +1,6 @@
 class Board
-  attr_accessor :cells
+  attr_accessor :cells, :columns, :rows
+  # validate cells.length == 81
 
   def initialize(cells:)
     @cells = cells
@@ -19,10 +20,18 @@ class Board
   end
 
   def rows
+    @rows ||= construct_rows
+  end
+
+  def construct_rows
     cells.each_slice(9).to_a
   end
 
   def columns
+    @columns ||= construct_columns
+  end
+
+  def construct_columns
     columns = [[],[],[],[],[],[],[],[],[]]
     columns.each do |column|
       rows.each { |row| column << row[columns.find_index(column)] }
@@ -31,6 +40,10 @@ class Board
   end
 
   def squares
+    @squares ||= construct_squares
+  end
+
+  def construct_squares
     squares = [[],[],[],[],[],[],[],[],[]]
     square_index = 0
     rows.each_slice(3).each do |trio|
@@ -44,7 +57,6 @@ class Board
         cell_index += 3
       end
     end
-
     squares
   end
 
