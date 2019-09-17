@@ -19,12 +19,12 @@ RSpec.describe Solver do
   end
 
   it "gives possibilities for a cell" do
-    possibilities = @solver.analyze_cell(0, 0)
+    possibilities = @solver.cell_possibilities(0, 0)
     expect(possibilities).to eq([6, 7, 9])
   end
 
   it "gives possibilities for a cell" do
-    possibilities = @solver.analyze_cell(4, 5)
+    possibilities = @solver.cell_possibilities(4, 5)
     expect(possibilities).to eq([3])
   end
 
@@ -43,8 +43,8 @@ RSpec.describe Solver do
   end
 
   it "fills in the entire board" do
-    @solver.fill_in
-    expect(@board.cells.include? 0).to eq(false)
+    @solver.fill_in_board
+    expect(@solver.board.cells.include? 0).to eq(false)
   end
   
 end

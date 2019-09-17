@@ -1,5 +1,5 @@
 class Solver
-  attr_accessor :board
+  attr_accessor :board, :filled_in_board
 
   def initialize(board:)
     @board = board
@@ -8,13 +8,19 @@ class Solver
   def solve_cell(x, y)
     return unless board.cell_value(x, y) == 0
 
-    possibilities = analyze_cell(x, y)
+    possibilities = cell_possibilities(x, y)
     if possibilities.length == 1
       board.set_value(x, y, possibilities[0])
     end
   end
 
-  def fill_in
+  def retrieve_solved_cell(x, y)
+    filled_in_board.cell_value(x, y)
+  end
+
+  def fill_in_board
+    @filled_in_board ||= board.dup
+
     while board.cells.include? 0 do
       [*0..8].each do |x|
         [*0..8].each do |y|
@@ -24,22 +30,19 @@ class Solver
     end
   end
 
-  def analyze_cell(x, y)
-    possibilities = [*1..9]
-    possibilities -= analyze_row(x, y)
-    possibilities -= analyze_column(x, y)
-    possibilities -= analyze_square(x, y)
+  def cell_possibilities(x, y)
+    [*1..9] - ( row_contents(y) | column_contents(x) | square_contents(x, y) )
   end
 
-  def analyze_row(x, y)
+  def row_contents(y)
     board.rows[y].tap {|row| row.delete(0)}
   end
 
-  def analyze_column(x, y)
+  def column_contents(x)
     board.columns[x].tap {|column| column.delete(0)}
   end
 
-  def analyze_square(x, y)
+  def square_contents(x, y)
     sq = determine_square(x, y)
     board.squares[sq].tap {|square| square.delete(0)}
   end
