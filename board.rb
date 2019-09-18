@@ -115,6 +115,10 @@ class Board
   end
 end
 
+# NOTE:
+#   - index/9 gives row --> y
+#   - index%9 gives column --> x
+
 # b = Board.new(cells:
 #   [
 #     0, 0, 2, 1, 0, 8, 5, 0, 3,

@@ -66,9 +66,11 @@ rspec solver_spec.rb
 
 ### Aspirations
 - Evolve to solve harder sudokus with more complex analytical tactics
-  - Note to self: analyze possibilities in other cells of the same row/column/square
-    - If the number of cells with matching lists of possibilities matches the number of possibilities, those possibilities can be removed from other cells' lists of possibilities within the same row/column/square
-      - ex. if both cell A and cell B can only be `[1, 2]`, then cell C in the same row/column/square can not include those possibilities
+  - Account for neighbor negation
+    - If nothing else in the square/row/column can be a number aside from one cell
+    - Neighbor negation is also affected by possibilities of neighbors
+      - ie if only two cells in the square next door can be a 9 and they form a row
+        that negates cells in current square, that might leave one option left
 - Create browser frontend
   - Interactive user interface
   - User can choose to be shown hints for individual cells

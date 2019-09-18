@@ -28,23 +28,53 @@ class Solver
     return unless filled_in_board.empty_cell(x, y)
 
     possibilities = filled_in_board.cell_possibilities(x, y)
-    possibilities -= aggregate_possibilities(x, y) unless possibilities.length == 1
+    possibilities -= exclusions(x, y) unless possibilities.length == 1
+    square_negations = square_negation_possibilities(x, y)
+    row_negations = row_negation_possibilities(x, y)
+    column_negations = column_negation_possibilities(x, y)
 
-    if possibilities.length == 1
-      filled_in_board.set_value(x, y, possibilities[0])
-      self.change_count = 0
-    end
+    solution = possibilities[0] if possibilities.length == 1
+    solution = square_negations[0] if square_negations.length == 1
+    solution = row_negations[0] if row_negations.length == 1
+    solution = column_negations[0] if column_negations.length == 1
+
+    return unless solution
+
+    filled_in_board.set_value(x, y, solution)
+    self.change_count = 0
   end
 
-  def aggregate_possibilities(x, y)
+  def column_negation_possibilities(x, y)
+    filled_in_board.cell_possibilities(x, y) -
+      neighbor_possibilities(
+        coords_of_column_neighbors(x, y)
+      ).flatten.uniq
+  end
+
+  def row_negation_possibilities(x, y)
+    filled_in_board.cell_possibilities(x, y) -
+      neighbor_possibilities(
+        coords_of_row_neighbors(x, y)
+      ).flatten.uniq
+  end
+
+  def square_negation_possibilities(x, y)
+    filled_in_board.cell_possibilities(x, y) -
+      neighbor_possibilities(
+        coords_of_square_neighbors(x, y)
+      ).flatten.uniq
+  end
+
+  def exclusions(x, y)
     column_possibilities = neighbor_possibilities(coords_of_column_neighbors(x, y))
     row_possibilities = neighbor_possibilities(coords_of_row_neighbors(x, y))
+    square_possibilities = neighbor_possibilities(coords_of_square_neighbors(x, y))
 
-    exclusions = []
-    exclusions << neighbor_exclusions(column_possibilities)
-    exclusions << neighbor_exclusions(row_possibilities)
-
-    exclusions.uniq
+    [].tap do |exclusions|
+      exclusions << neighbor_exclusions(column_possibilities)
+      exclusions << neighbor_exclusions(row_possibilities)
+      exclusions << neighbor_exclusions(square_possibilities)
+    end.flatten(2).uniq
   end
 
   def coords_of_column_neighbors(x, y)
@@ -55,12 +85,43 @@ class Solver
     [*0..8].reject { |n| n == x }.map { |x| [x, y] }
   end
 
+  def coords_of_square_neighbors(x, y)
+    square = filled_in_board.determine_square(x, y)
+    neighbors = []
+    case square
+    when 0
+      [*0..2].each {|x| [*0..2].each {|y| neighbors << [x, y] } }
+    when 1
+      [*3..5].each {|x| [*0..2].each {|y| neighbors << [x, y] } }
+    when 2
+      [*6..8].each {|x| [*0..2].each {|y| neighbors << [x, y] } }
+    when 3
+      [*0..2].each {|x| [*3..5].each {|y| neighbors << [x, y] } }
+    when 4
+      [*3..5].each {|x| [*3..5].each {|y| neighbors << [x, y] } }
+    when 5
+      [*6..8].each {|x| [*3..5].each {|y| neighbors << [x, y] } }
+    when 6
+      [*0..2].each {|x| [*6..8].each {|y| neighbors << [x, y] } }
+    when 7
+      [*3..5].each {|x| [*6..8].each {|y| neighbors << [x, y] } }
+    when 8
+      [*6..8].each {|x| [*6..8].each {|y| neighbors << [x, y] } }
+    end
+    neighbors.tap {|neighbors| neighbors.delete([x, y])}
+  end
+
   def neighbor_possibilities(coords_of_neighborhood)
     coords_of_neighborhood.map do |coords|
       filled_in_board.cell_possibilities(*coords)
     end.compact
   end
 
+  # When the number of neighbors that have a certain combination of possibilities
+  #   equals the number of possibilities, only those neighbors can possibly 
+  #   contain those possibilities
+  #     Ex: two neighbors have possibilities [1, 9]
+  #     if one is 1, the other is 9 and vice versa!
   def neighbor_exclusions(neighbor_possibilities)
     neighbor_possibilities.select do |possibilities|
       neighbor_possibilities.count(possibilities) == possibilities.length
@@ -70,31 +131,31 @@ end
 
 # EASY
 # b = Board.new(cells:
-  # [
-  #   0, 0, 2, 1, 0, 8, 5, 0, 3,
-  #   0, 0, 0, 0, 2, 0, 9, 0, 7,
-  #   8, 0, 0, 3, 9, 0, 0, 0, 0,
-  #   3, 1, 7, 6, 0, 0, 0, 0, 0,
-  #   4, 6, 0, 0, 5, 0, 0, 7, 2,
-  #   0, 0, 0, 0, 0, 4, 8, 1, 6,
-  #   0, 0, 0, 0, 7, 3, 0, 0, 5,
-  #   5, 0, 6, 0, 1, 0, 0, 0, 0,
-  #   1, 0, 3, 5, 0, 6, 7, 0, 0
-  # ])
+#   [
+#     0, 0, 2, 1, 0, 8, 5, 0, 3,
+#     0, 0, 0, 0, 2, 0, 9, 0, 7,
+#     8, 0, 0, 3, 9, 0, 0, 0, 0,
+#     3, 1, 7, 6, 0, 0, 0, 0, 0,
+#     4, 6, 0, 0, 5, 0, 0, 7, 2,
+#     0, 0, 0, 0, 0, 4, 8, 1, 6,
+#     0, 0, 0, 0, 7, 3, 0, 0, 5,
+#     5, 0, 6, 0, 1, 0, 0, 0, 0,
+#     1, 0, 3, 5, 0, 6, 7, 0, 0
+#   ])
 
 # MEDIUM
-b = Board.new(cells:
-  [
-    0, 9, 0, 4, 0, 6, 0, 3, 0,
-    8, 0, 0, 0, 0, 7, 0, 0, 9,
-    2, 0, 3, 0, 8, 0, 0, 0, 4,
-    0, 2, 9, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 5, 8, 2, 0,
-    5, 0, 0, 0, 7, 0, 6, 0, 1,
-    3, 0, 0, 9, 0, 0, 0, 0, 7,
-    0, 8, 0, 6, 0, 1, 0, 4, 0
-  ])
+# b = Board.new(cells:
+#   [
+#     0, 9, 0, 4, 0, 6, 0, 3, 0,
+#     8, 0, 0, 0, 0, 7, 0, 0, 9,
+#     2, 0, 3, 0, 8, 0, 0, 0, 4,
+#     0, 2, 9, 1, 0, 0, 0, 0, 0,
+#     0, 0, 0, 0, 0, 0, 0, 0, 0,
+#     0, 0, 0, 0, 0, 5, 8, 2, 0,
+#     5, 0, 0, 0, 7, 0, 6, 0, 1,
+#     3, 0, 0, 9, 0, 0, 0, 0, 7,
+#     0, 8, 0, 6, 0, 1, 0, 4, 0
+#   ])
 
 # HARD
 # b = Board.new(cells:
@@ -107,11 +168,24 @@ b = Board.new(cells:
 #     0, 0, 6, 0, 0, 0, 0, 9, 4,
 #     0, 0, 0, 0, 9, 0, 0, 0, 7,
 #     0, 7, 9, 0, 0, 1, 5, 0, 0,
-#     0, 2, 0, 8, 7, 0, 0, 0, 0
+#     0, 2, 0, 8, 0, 7, 0, 0, 0
 #   ])
+
+# EVIL
+b = Board.new(cells:
+  [
+    8, 6, 0, 2, 0, 0, 0, 0, 0,
+    0, 0, 5, 3, 4, 0, 0, 0, 0,
+    4, 1, 0, 0, 0, 9, 0, 0, 0,
+    7, 0, 0, 0, 0, 0, 8, 0, 0,
+    0, 0, 0, 7, 9, 6, 0, 0, 0,
+    0, 0, 2, 0, 0, 0, 0, 0, 5,
+    0, 0, 0, 4, 0, 0, 0, 1, 3,
+    0, 0, 0, 0, 6, 7, 5, 0, 0,
+    0, 0, 0, 0, 0, 5, 0, 6, 2
+  ])
 
 ##########################
 s = Solver.new(board: b)
 s.fill_in_board
 s.filled_in_board.print_rows
-# s.aggregate_possibilities(0, 6)
