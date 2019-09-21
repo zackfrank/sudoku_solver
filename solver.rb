@@ -58,7 +58,7 @@ class Solver
   def negation_value(neighbor_coords, x, y)
     possibilities = filled_in_board.cell_possibilities(x, y) -
       neighbor_possibilities(
-        neighbor_coords(x, y)
+        neighbor_coords
       ).flatten.uniq
 
     possibilities.first if possibilities.length == 1
@@ -127,7 +127,7 @@ class Solver
       end
 
       coords_of_possibilities.each do |num, coords|
-        expected_neighbors << num if coords.all? {|coords| coords[0] == y}
+        expected_neighbors << num if coords.all? {|coords| coords[1] == y}
       end
     end
 
@@ -268,31 +268,31 @@ end
 #   ])
 
 # EVIL
-# b = Board.new(cells:
-#   [
-#     8, 6, 0, 2, 0, 0, 0, 0, 0,
-#     0, 0, 5, 3, 4, 0, 0, 0, 0,
-#     4, 1, 0, 0, 0, 9, 0, 0, 0,
-#     7, 0, 0, 0, 0, 0, 8, 0, 0,
-#     0, 0, 0, 7, 9, 6, 0, 0, 0,
-#     0, 0, 2, 0, 0, 0, 0, 0, 5,
-#     0, 0, 0, 4, 0, 0, 0, 1, 3,
-#     0, 0, 0, 0, 6, 7, 5, 0, 0,
-#     0, 0, 0, 0, 0, 5, 0, 6, 2
-#   ])
-
 b = Board.new(cells:
   [
-    0, 0, 3, 0, 0, 0, 0, 0, 4,
-    1, 0, 4, 3, 0, 0, 0, 2, 0,
-    0, 9, 0, 0, 0, 0, 3, 0, 0,
-    9, 7, 8, 0, 0, 5, 0, 0, 0,
-    0, 0, 0, 4, 0, 8, 0, 0, 0,
-    0, 0, 0, 2, 0, 0, 8, 9, 6,
-    0, 0, 9, 0, 0, 0, 0, 1, 0,
-    0, 2, 0, 0, 0, 7, 5, 0, 8,
-    3, 0, 0, 0, 0, 0, 6, 0, 0
+    8, 6, 0, 2, 0, 0, 0, 0, 0,
+    0, 0, 5, 3, 4, 0, 0, 0, 0,
+    4, 1, 0, 0, 0, 9, 0, 0, 0,
+    7, 0, 0, 0, 0, 0, 8, 0, 0,
+    0, 0, 0, 7, 9, 6, 0, 0, 0,
+    0, 0, 2, 0, 0, 0, 0, 0, 5,
+    0, 0, 0, 4, 0, 0, 0, 1, 3,
+    0, 0, 0, 0, 6, 7, 5, 0, 0,
+    0, 0, 0, 0, 0, 5, 0, 6, 2
   ])
+
+# b = Board.new(cells:
+#   [
+#     0, 0, 3, 0, 0, 0, 0, 0, 4,
+#     1, 0, 4, 3, 0, 0, 0, 2, 0,
+#     0, 9, 0, 0, 0, 0, 3, 0, 0,
+#     9, 7, 8, 0, 0, 5, 0, 0, 0,
+#     0, 0, 0, 4, 0, 8, 0, 0, 0,
+#     0, 0, 0, 2, 0, 0, 8, 9, 6,
+#     0, 0, 9, 0, 0, 0, 0, 1, 0,
+#     0, 2, 0, 0, 0, 7, 5, 0, 8,
+#     3, 0, 0, 0, 0, 0, 6, 0, 0
+#   ])
 
 ##########################
 s = Solver.new(board: b)
