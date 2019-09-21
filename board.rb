@@ -19,20 +19,10 @@ class Board
     (9 * y + x)
   end
 
-  # def rows
-  #   @rows ||= construct_rows
-  # end
-
-  # def construct_rows
   def rows
     cells.each_slice(9).to_a
   end
 
-  # def columns
-  #   @columns ||= construct_columns
-  # end
-
-  # def construct_columns
   def columns
     columns = [[], [], [], [], [], [], [], [], []]
     columns.each do |column|
@@ -41,11 +31,6 @@ class Board
     columns
   end
 
-  # def squares
-  #   @squares ||= construct_squares
-  # end
-
-  # def construct_squares
   def squares
     squares = [[], [], [], [], [], [], [], [], []]
     square_index = 0

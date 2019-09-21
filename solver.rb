@@ -13,12 +13,10 @@ class Solver
   def fill_in_board
     @filled_in_board ||= board.dup # rename to solution?
 
-    # allow a full cycle without solving if (0, 0) is last cell solved
-    until !filled_in_board.cells.include?(0) || change_count > 161
+    while filled_in_board.cells.include?(0)
       [*0..8].each do |x|
         [*0..8].each do |y|
           solve_cell(x, y)
-          self.change_count += 1
         end
       end
     end
@@ -29,19 +27,21 @@ class Solver
 
     possibilities = filled_in_board.cell_possibilities(x, y)
     possibilities -= exclusions(x, y) unless possibilities.length == 1
+
     square_negations = square_negation_possibilities(x, y)
     row_negations = row_negation_possibilities(x, y)
     column_negations = column_negation_possibilities(x, y)
+    distant_neighbor_negations = distant_neighbor_negations(x, y)
 
     solution = possibilities[0] if possibilities.length == 1
     solution = square_negations[0] if square_negations.length == 1
     solution = row_negations[0] if row_negations.length == 1
     solution = column_negations[0] if column_negations.length == 1
+    solution = distant_neighbor_negations[0] if distant_neighbor_negations.length == 1
 
     return unless solution
 
     filled_in_board.set_value(x, y, solution)
-    self.change_count = 0
   end
 
   def column_negation_possibilities(x, y)
@@ -65,6 +65,97 @@ class Solver
       ).flatten.uniq
   end
 
+  def distant_neighbor_negations(x, y)
+    coords_of_possibilities = { }
+
+    filled_in_board.cell_possibilities(x, y).each do |possibility|
+      coords_of_possibilities[possibility] = []
+
+      coords_of_square_neighbors(x, y).each do |sq_neighbor|
+        # collect coords of neighbors with possibilities that match cell
+        neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
+        next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
+
+        coords_of_possibilities[possibility] << sq_neighbor
+      end
+    end
+
+    # coords_of_possibilities looks like this:
+    # {
+    #   1 => [[4, 5]],
+    #   3 => [[4, 5], [4, 6]]
+    # }
+
+    coords_of_possibilities.delete_if {|_num, coords| coords.empty? || coords.length > 1 }
+
+    expected_neighbors = []
+    coords_of_possibilities.each do |num, coords|
+      potential_expected_neighbors = gather_expected_neighbors(*coords.first, filled_in_board.determine_square(x, y))
+
+      expected_neighbors << num if potential_expected_neighbors.include? num
+    end
+
+    expected_neighbors
+  end
+
+  def gather_expected_neighbors(x, y, sq)
+    expected_neighbors = []
+
+    coords_of_row_neighbors(x, y).each do |coords|
+      current_square = filled_in_board.determine_square(*coords)
+      next if current_square == sq # ignore neighbors within square
+
+      possibilities = filled_in_board.cell_possibilities(*coords)
+      next unless possibilities
+
+      coords_of_possibilities = { }
+
+      possibilities.each do |pos|
+        coords_of_possibilities[pos] = []
+
+        coords_of_square_neighbors(*coords).each do |sq_neighbor|
+          # collect coords of neighbors with possibilities that match cell
+          neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
+          next unless neighbor_possibilities && neighbor_possibilities.include?(pos)
+
+          coords_of_possibilities[pos] << sq_neighbor
+        end
+      end
+
+      coords_of_possibilities.each do |num, coords|
+        expected_neighbors << num if coords.all? {|coords| coords[0] == y}
+      end
+    end
+
+    coords_of_column_neighbors(x, y).each do |coords|
+      current_square = filled_in_board.determine_square(*coords)
+      next if current_square == sq # ignore neighbors within square
+
+      possibilities = filled_in_board.cell_possibilities(*coords)
+      next unless possibilities
+
+      coords_of_possibilities = { }
+
+      possibilities.each do |pos|
+        coords_of_possibilities[pos] = []
+        coords_of_square_neighbors(*coords).each do |sq_neighbor|
+          # collect coords of neighbors with possibilities that match cell
+          neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
+          next unless neighbor_possibilities && neighbor_possibilities.include?(pos)
+
+          coords_of_possibilities[pos] << sq_neighbor
+        end
+      end
+
+      coords_of_possibilities.each do |num, coords|
+        expected_neighbors << num if coords.all? {|coords| coords[0] == x}
+      end
+    end
+
+    expected_neighbors.uniq
+  end
+
+  # These are values that the current cell could NOT be
   def exclusions(x, y)
     column_possibilities = neighbor_possibilities(coords_of_column_neighbors(x, y))
     row_possibilities = neighbor_possibilities(coords_of_row_neighbors(x, y))
@@ -111,6 +202,7 @@ class Solver
     neighbors.tap {|neighbors| neighbors.delete([x, y])}
   end
 
+  # returns array of integers
   def neighbor_possibilities(coords_of_neighborhood)
     coords_of_neighborhood.map do |coords|
       filled_in_board.cell_possibilities(*coords)
