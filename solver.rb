@@ -32,23 +32,24 @@ class Solver
   # Check all possible strategies for solving a cell &
   #   return the first one found
   def possible_cell_solution(x, y)
-    basic_possibilities_solution(x, y) ||
     negation_solution(x, y) ||
+    possibilities_minus_exclusions_solution(x, y) ||
     distant_neighbor_negations_solution(x, y)
   end
 
-  # Most basic strategy for solving a cell:
-  #   Eliminating values in all neighbors in same row, column, and square
-  #   if a single value remains, this is the cell value
-  def basic_possibilities_solution(x, y)
-    possibilities = filled_in_board.cell_possibilities(x, y) - exclusions(x, y)
-    possibilities.first if possibilities.length == 1
-  end
+###############################################################
 
-  # Second-most basic strategy for solving a cell:
-    #   If set of all possibilities in one set of neighbors (row, column, or square)
-    #   is missing a single value which is a possibility for this cell, that is the
-    #   value of this cell
+# NEGATION LOGIC
+
+  # Most basic strategy for solving a cell:
+  #   If set of all possibilities in one set of neighbors (row, column, or square)
+  #   is missing a single value which is a possibility for this cell, that is the
+  #   value of this cell
+
+  # Ex. no neighbors include possibility: 5
+  # Cell's possibilities are: [1, 2, 5]
+  # Cell is 5
+
   def negation_solution(x, y)
     negation_value(coords_of_square_neighbors(x, y), x, y) ||
     negation_value(coords_of_row_neighbors(x, y), x, y) ||
@@ -64,19 +65,78 @@ class Solver
     possibilities.first if possibilities.length == 1
   end
 
+###############################################################
+
+# POSSIBILITIES MINUS EXCLUSIONS LOGIC
+
+  # Second most basic strategy for solving a cell:
+  #   Eliminating values in all neighbors in same row, column, and square,
+  #   if a single value remains, this is the cell value. Otherwise, anaylze
+  #   neighbors for possible 'exclusions'. If exclusions whittle possibilities
+  #   down to a single value, this is the cell value.
+
+  def possibilities_minus_exclusions_solution(x, y)
+    possibilities = filled_in_board.cell_possibilities(x, y) - exclusions(x, y)
+    return possibilities.first if possibilities.length == 1
+
+    possibilities -= exclusions(x, y)
+    return possibilities.first if possibilities.length == 1
+  end
+
+  # These are values that the current cell could NOT be
+  def exclusions(x, y)
+    column_possibilities = neighbor_possibilities(coords_of_column_neighbors(x, y))
+    row_possibilities = neighbor_possibilities(coords_of_row_neighbors(x, y))
+    square_possibilities = neighbor_possibilities(coords_of_square_neighbors(x, y))
+
+    [].tap do |exclusions|
+      exclusions << neighbor_exclusions(column_possibilities)
+      exclusions << neighbor_exclusions(row_possibilities)
+      exclusions << neighbor_exclusions(square_possibilities)
+    end.flatten(2).uniq
+  end
+
+  # Returns array of integers
+  def neighbor_possibilities(coords_of_neighborhood)
+    coords_of_neighborhood.map do |coords|
+      filled_in_board.cell_possibilities(*coords)
+    end.compact
+  end
+
+  # When the number of neighbors that have a certain combination of possibilities
+  #   equals the number of possibilities, only those neighbors can possibly
+  #   contain those possibilities
+  #     Ex: two neighbors have possibilities [1, 9]
+  #     if one is 1, the other is 9 and vice versa!
+  def neighbor_exclusions(neighbor_possibilities)
+    neighbor_possibilities.select do |possibilities|
+      neighbor_possibilities.count(possibilities) == possibilities.length
+    end
+  end
+
+###############################################################
+
+# DISTANT NEIGHBOR NEGATION LOGIC
+
+  # Most complicated strategy for solving a cell:
+  #   If only two cells within a square share a possible value
+  #   the other cell's neighbors row and column neighbors are analyzed for
+  #   negation/exclusion to possibly eliminate the value from the second cell
+  #   and leave only the single cell as a candidate within the square for the value
+
   def distant_neighbor_negations_solution(x, y)
     possibilities = distant_neighbor_negations(x, y)
     possibilities.first if possibilities.length == 1
   end
 
   def distant_neighbor_negations(x, y)
-    coords_of_possibilities = { }
+    coords_of_possibilities = {}
 
     filled_in_board.cell_possibilities(x, y).each do |possibility|
       coords_of_possibilities[possibility] = []
 
+      # Aggregate all square neighbors with matching possibilities
       coords_of_square_neighbors(x, y).each do |sq_neighbor|
-        # collect coords of neighbors with possibilities that match cell
         neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
         next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
 
@@ -94,7 +154,7 @@ class Solver
 
     expected_neighbors = []
     coords_of_possibilities.each do |num, coords|
-      potential_expected_neighbors = gather_expected_neighbors(*coords.first, filled_in_board.determine_square(x, y))
+      potential_expected_neighbors = gather_expected_neighbors(*coords.flatten, filled_in_board.determine_square(x, y))
 
       expected_neighbors << num if potential_expected_neighbors.include? num
     end
@@ -105,72 +165,51 @@ class Solver
   def gather_expected_neighbors(x, y, sq)
     expected_neighbors = []
 
-    coords_of_row_neighbors(x, y).each do |coords|
+    expected_neighbors << expected_neighbors(coords_of_row_neighbors(x, y), sq, x, y)
+    expected_neighbors << expected_neighbors(coords_of_column_neighbors(x, y), sq, x, y)
+
+    expected_neighbors.flatten.uniq
+  end
+
+  def expected_neighbors(coords_of_neighbors, sq, x, y)
+    analyzing_row = coords_of_neighbors.all? { |coords| coords[1] == y }
+    index = analyzing_row ? 1 : 0
+    coordinate = analyzing_row ? y : x
+
+    expected_neighbors = []
+
+    coords_of_neighbors.each do |coords|
       current_square = filled_in_board.determine_square(*coords)
       next if current_square == sq # ignore neighbors within square
 
       possibilities = filled_in_board.cell_possibilities(*coords)
       next unless possibilities
 
-      coords_of_possibilities = { }
+      coords_of_possibilities = {}
 
-      possibilities.each do |pos|
-        coords_of_possibilities[pos] = []
+      possibilities.each do |possibility|
+        coords_of_possibilities[possibility] = []
 
-        coords_of_square_neighbors(*coords).each do |sq_neighbor|
-          # collect coords of neighbors with possibilities that match cell
-          neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
-          next unless neighbor_possibilities && neighbor_possibilities.include?(pos)
+        # Aggregate all square neighbors with matching possibilities
+        coords_of_square_neighbors(*coords).each do |neighbor|
+          neighbor_possibilities = filled_in_board.cell_possibilities(*neighbor)
+          next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
 
-          coords_of_possibilities[pos] << sq_neighbor
+          coords_of_possibilities[possibility] << neighbor
         end
       end
 
+      # Value is an expected neighbor if ALL cells in a neighboring square with that
+      #   value as a possibility share the same row or column as current cell
       coords_of_possibilities.each do |num, coords|
-        expected_neighbors << num if coords.all? {|coords| coords[1] == y}
+        expected_neighbors << num if coords.all? { |coords| coords[index] == coordinate }
       end
     end
 
-    coords_of_column_neighbors(x, y).each do |coords|
-      current_square = filled_in_board.determine_square(*coords)
-      next if current_square == sq # ignore neighbors within square
-
-      possibilities = filled_in_board.cell_possibilities(*coords)
-      next unless possibilities
-
-      coords_of_possibilities = { }
-
-      possibilities.each do |pos|
-        coords_of_possibilities[pos] = []
-        coords_of_square_neighbors(*coords).each do |sq_neighbor|
-          # collect coords of neighbors with possibilities that match cell
-          neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
-          next unless neighbor_possibilities && neighbor_possibilities.include?(pos)
-
-          coords_of_possibilities[pos] << sq_neighbor
-        end
-      end
-
-      coords_of_possibilities.each do |num, coords|
-        expected_neighbors << num if coords.all? {|coords| coords[0] == x}
-      end
-    end
-
-    expected_neighbors.uniq
+    expected_neighbors
   end
 
-  # These are values that the current cell could NOT be
-  def exclusions(x, y)
-    column_possibilities = neighbor_possibilities(coords_of_column_neighbors(x, y))
-    row_possibilities = neighbor_possibilities(coords_of_row_neighbors(x, y))
-    square_possibilities = neighbor_possibilities(coords_of_square_neighbors(x, y))
-
-    [].tap do |exclusions|
-      exclusions << neighbor_exclusions(column_possibilities)
-      exclusions << neighbor_exclusions(row_possibilities)
-      exclusions << neighbor_exclusions(square_possibilities)
-    end.flatten(2).uniq
-  end
+###############################################################
 
   def coords_of_column_neighbors(x, y)
     [*0..8].reject { |n| n == y }.map { |y| [x, y] }
@@ -205,26 +244,9 @@ class Solver
     end
     neighbors.tap {|neighbors| neighbors.delete([x, y])}
   end
-
-  # returns array of integers
-  def neighbor_possibilities(coords_of_neighborhood)
-    coords_of_neighborhood.map do |coords|
-      filled_in_board.cell_possibilities(*coords)
-    end.compact
-  end
-
-  # When the number of neighbors that have a certain combination of possibilities
-  #   equals the number of possibilities, only those neighbors can possibly 
-  #   contain those possibilities
-  #     Ex: two neighbors have possibilities [1, 9]
-  #     if one is 1, the other is 9 and vice versa!
-  def neighbor_exclusions(neighbor_possibilities)
-    neighbor_possibilities.select do |possibilities|
-      neighbor_possibilities.count(possibilities) == possibilities.length
-    end
-  end
 end
 
+###############################################################
 # EASY
 # b = Board.new(cells:
 #   [
