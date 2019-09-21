@@ -24,24 +24,35 @@ class Solver
 
   def solve_cell(x, y)
     return unless filled_in_board.empty_cell(x, y)
-
-    possibilities = filled_in_board.cell_possibilities(x, y)
-    possibilities -= exclusions(x, y) unless possibilities.length == 1
-
-    square_negations = square_negation_possibilities(x, y)
-    row_negations = row_negation_possibilities(x, y)
-    column_negations = column_negation_possibilities(x, y)
-    distant_neighbor_negations = distant_neighbor_negations(x, y)
-
-    solution = possibilities[0] if possibilities.length == 1
-    solution = square_negations[0] if square_negations.length == 1
-    solution = row_negations[0] if row_negations.length == 1
-    solution = column_negations[0] if column_negations.length == 1
-    solution = distant_neighbor_negations[0] if distant_neighbor_negations.length == 1
-
-    return unless solution
+    return unless (solution = possible_cell_solution(x, y))
 
     filled_in_board.set_value(x, y, solution)
+  end
+
+  def possible_cell_solution(x, y)
+    basic_possibilities_solution(x, y) ||
+    negation_solution(x, y) ||
+    distant_neighbor_negations_solution(x, y)
+  end
+
+  def basic_possibilities_solution(x, y)
+    possibilities = filled_in_board.cell_possibilities(x, y) - exclusions(x, y)
+    possibilities.first if possibilities.length == 1
+  end
+
+  def negation_solution(x, y)
+    [
+      square_negation_possibilities(x, y),
+      row_negation_possibilities(x, y),
+      column_negation_possibilities(x, y)
+    ]
+    .find {|possibilities| possibilities.length == 1 }
+    &.first
+  end
+
+  def distant_neighbor_negations_solution(x, y)
+    possibilities = distant_neighbor_negations(x, y)
+    possibilities.first if possibilities.length == 1
   end
 
   def column_negation_possibilities(x, y)
@@ -264,17 +275,30 @@ end
 #   ])
 
 # EVIL
+# b = Board.new(cells:
+#   [
+#     8, 6, 0, 2, 0, 0, 0, 0, 0,
+#     0, 0, 5, 3, 4, 0, 0, 0, 0,
+#     4, 1, 0, 0, 0, 9, 0, 0, 0,
+#     7, 0, 0, 0, 0, 0, 8, 0, 0,
+#     0, 0, 0, 7, 9, 6, 0, 0, 0,
+#     0, 0, 2, 0, 0, 0, 0, 0, 5,
+#     0, 0, 0, 4, 0, 0, 0, 1, 3,
+#     0, 0, 0, 0, 6, 7, 5, 0, 0,
+#     0, 0, 0, 0, 0, 5, 0, 6, 2
+#   ])
+
 b = Board.new(cells:
   [
-    8, 6, 0, 2, 0, 0, 0, 0, 0,
-    0, 0, 5, 3, 4, 0, 0, 0, 0,
-    4, 1, 0, 0, 0, 9, 0, 0, 0,
-    7, 0, 0, 0, 0, 0, 8, 0, 0,
-    0, 0, 0, 7, 9, 6, 0, 0, 0,
-    0, 0, 2, 0, 0, 0, 0, 0, 5,
-    0, 0, 0, 4, 0, 0, 0, 1, 3,
-    0, 0, 0, 0, 6, 7, 5, 0, 0,
-    0, 0, 0, 0, 0, 5, 0, 6, 2
+    0, 0, 3, 0, 0, 0, 0, 0, 4,
+    1, 0, 4, 3, 0, 0, 0, 2, 0,
+    0, 9, 0, 0, 0, 0, 3, 0, 0,
+    9, 7, 8, 0, 0, 5, 0, 0, 0,
+    0, 0, 0, 4, 0, 8, 0, 0, 0,
+    0, 0, 0, 2, 0, 0, 8, 9, 6,
+    0, 0, 9, 0, 0, 0, 0, 1, 0,
+    0, 2, 0, 0, 0, 7, 5, 0, 8,
+    3, 0, 0, 0, 0, 0, 6, 0, 0
   ])
 
 ##########################
