@@ -130,25 +130,7 @@ class Solver
   end
 
   def distant_neighbor_negations(x, y)
-    coords_of_possibilities = {}
-
-    filled_in_board.cell_possibilities(x, y).each do |possibility|
-      coords_of_possibilities[possibility] = []
-
-      # Aggregate all square neighbors with matching possibilities
-      coords_of_square_neighbors(x, y).each do |sq_neighbor|
-        neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
-        next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
-
-        coords_of_possibilities[possibility] << sq_neighbor
-      end
-    end
-
-    # coords_of_possibilities looks like this:
-    # {
-    #   1 => [[4, 5]],
-    #   3 => [[4, 5], [4, 6]]
-    # }
+    coords_of_possibilities = square_neighbors_with_shared_possibilities(x, y)
 
     coords_of_possibilities.delete_if {|_num, coords| coords.empty? || coords.length > 1 }
 
@@ -160,6 +142,32 @@ class Solver
     end
 
     expected_neighbors
+  end
+
+
+  # Return looks like this:
+  # {
+  #   1 => [[4, 5]],
+  #   3 => [[4, 5], [4, 6]]
+  #   ...
+  # }
+  def square_neighbors_with_shared_possibilities(x, y, possibilities = nil)
+    possibilities ||= filled_in_board.cell_possibilities(x, y)
+    coords_of_possibilities = {}
+
+    possibilities.each do |possibility|
+      coords_of_possibilities[possibility] = []
+
+      # Aggregate all square neighbors with matching possibilities
+      coords_of_square_neighbors(x, y).each do |sq_neighbor|
+        neighbor_possibilities = filled_in_board.cell_possibilities(*sq_neighbor)
+        next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
+
+        coords_of_possibilities[possibility] << sq_neighbor
+      end
+    end
+
+    coords_of_possibilities
   end
 
   def gather_expected_neighbors(x, y, sq)
@@ -185,19 +193,7 @@ class Solver
       possibilities = filled_in_board.cell_possibilities(*coords)
       next unless possibilities
 
-      coords_of_possibilities = {}
-
-      possibilities.each do |possibility|
-        coords_of_possibilities[possibility] = []
-
-        # Aggregate all square neighbors with matching possibilities
-        coords_of_square_neighbors(*coords).each do |neighbor|
-          neighbor_possibilities = filled_in_board.cell_possibilities(*neighbor)
-          next unless neighbor_possibilities && neighbor_possibilities.include?(possibility)
-
-          coords_of_possibilities[possibility] << neighbor
-        end
-      end
+      coords_of_possibilities = square_neighbors_with_shared_possibilities(*coords, possibilities)
 
       # Value is an expected neighbor if ALL cells in a neighboring square with that
       #   value as a possibility share the same row or column as current cell
