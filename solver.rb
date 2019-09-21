@@ -29,51 +29,44 @@ class Solver
     filled_in_board.set_value(x, y, solution)
   end
 
+  # Check all possible strategies for solving a cell &
+  #   return the first one found
   def possible_cell_solution(x, y)
     basic_possibilities_solution(x, y) ||
     negation_solution(x, y) ||
     distant_neighbor_negations_solution(x, y)
   end
 
+  # Most basic strategy for solving a cell:
+  #   Eliminating values in all neighbors in same row, column, and square
+  #   if a single value remains, this is the cell value
   def basic_possibilities_solution(x, y)
     possibilities = filled_in_board.cell_possibilities(x, y) - exclusions(x, y)
     possibilities.first if possibilities.length == 1
   end
 
+  # Second-most basic strategy for solving a cell:
+    #   If set of all possibilities in one set of neighbors (row, column, or square)
+    #   is missing a single value which is a possibility for this cell, that is the
+    #   value of this cell
   def negation_solution(x, y)
-    [
-      square_negation_possibilities(x, y),
-      row_negation_possibilities(x, y),
-      column_negation_possibilities(x, y)
-    ]
-    .find {|possibilities| possibilities.length == 1 }
-    &.first
+    negation_value(coords_of_square_neighbors(x, y), x, y) ||
+    negation_value(coords_of_row_neighbors(x, y), x, y) ||
+    negation_value(coords_of_column_neighbors(x, y), x, y)
+  end
+
+  def negation_value(neighbor_coords, x, y)
+    possibilities = filled_in_board.cell_possibilities(x, y) -
+      neighbor_possibilities(
+        neighbor_coords(x, y)
+      ).flatten.uniq
+
+    possibilities.first if possibilities.length == 1
   end
 
   def distant_neighbor_negations_solution(x, y)
     possibilities = distant_neighbor_negations(x, y)
     possibilities.first if possibilities.length == 1
-  end
-
-  def column_negation_possibilities(x, y)
-    filled_in_board.cell_possibilities(x, y) -
-      neighbor_possibilities(
-        coords_of_column_neighbors(x, y)
-      ).flatten.uniq
-  end
-
-  def row_negation_possibilities(x, y)
-    filled_in_board.cell_possibilities(x, y) -
-      neighbor_possibilities(
-        coords_of_row_neighbors(x, y)
-      ).flatten.uniq
-  end
-
-  def square_negation_possibilities(x, y)
-    filled_in_board.cell_possibilities(x, y) -
-      neighbor_possibilities(
-        coords_of_square_neighbors(x, y)
-      ).flatten.uniq
   end
 
   def distant_neighbor_negations(x, y)
