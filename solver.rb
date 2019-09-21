@@ -173,10 +173,10 @@ class Solver
   def gather_expected_neighbors(x, y, sq)
     expected_neighbors = []
 
-    expected_neighbors << expected_neighbors(coords_of_row_neighbors(x, y), sq, x, y)
-    expected_neighbors << expected_neighbors(coords_of_column_neighbors(x, y), sq, x, y)
+    expected_neighbors += expected_neighbors(coords_of_row_neighbors(x, y), sq, x, y)
+    expected_neighbors += expected_neighbors(coords_of_column_neighbors(x, y), sq, x, y)
 
-    expected_neighbors.flatten.uniq
+    expected_neighbors.uniq
   end
 
   def expected_neighbors(coords_of_neighbors, sq, x, y)
