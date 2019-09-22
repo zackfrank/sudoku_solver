@@ -171,19 +171,13 @@ class Solver
   end
 
   def gather_expected_neighbors(x, y, sq)
-    expected_neighbors = []
-
-    expected_neighbors += expected_neighbors(coords_of_row_neighbors(x, y), sq, x, y)
-    expected_neighbors += expected_neighbors(coords_of_column_neighbors(x, y), sq, x, y)
-
-    expected_neighbors.uniq
+    [].tap do |expected_neighbors|
+      expected_neighbors << expected_neighbors(coords_of_row_neighbors(x, y), sq, x, y)
+      expected_neighbors << expected_neighbors(coords_of_column_neighbors(x, y), sq, x, y)
+    end.flatten.uniq
   end
 
   def expected_neighbors(coords_of_neighbors, sq, x, y)
-    analyzing_row = coords_of_neighbors.all? { |coords| coords[1] == y }
-    index = analyzing_row ? 1 : 0
-    coordinate = analyzing_row ? y : x
-
     expected_neighbors = []
 
     coords_of_neighbors.each do |coords|
@@ -198,11 +192,16 @@ class Solver
       # Value is an expected neighbor if ALL cells in a neighboring square with that
       #   value as a possibility share the same row or column as current cell
       coords_of_possibilities.each do |num, coords|
-        expected_neighbors << num if coords.all? { |coords| coords[index] == coordinate }
+        expected_neighbors << num if row_or_column_neighbors(coords, x, y)
       end
     end
 
     expected_neighbors
+  end
+
+  def row_or_column_neighbors(coords, x, y)
+    coords.all? { |coords| coords[0] == x } ||
+      coords.all? { |coords| coords[1] == y }
   end
 
 ###############################################################
