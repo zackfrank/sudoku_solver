@@ -180,18 +180,17 @@ class Solver
   def expected_neighbors(coords_of_neighbors, sq, x, y)
     expected_neighbors = []
 
+    # Run through each neighbor in a row or column and check for neighbors of the
+    #   neighbor in the same square that share possibilities
     coords_of_neighbors.each do |coords|
-      current_square = filled_in_board.determine_square(*coords)
-      next if current_square == sq # ignore neighbors within square
+      next if filled_in_board.determine_square(*coords) == sq # ignore neighbors within square
 
       possibilities = filled_in_board.cell_possibilities(*coords)
       next unless possibilities
 
-      coords_of_possibilities = square_neighbors_with_shared_possibilities(*coords, possibilities)
-
-      # Value is an expected neighbor if ALL cells in a neighboring square with that
+      # Value is an 'expected neighbor' if ALL cells in a neighboring square with that
       #   value as a possibility share the same row or column as current cell
-      coords_of_possibilities.each do |num, coords|
+      square_neighbors_with_shared_possibilities(*coords, possibilities).each do |num, coords|
         expected_neighbors << num if row_or_column_neighbors(coords, x, y)
       end
     end
