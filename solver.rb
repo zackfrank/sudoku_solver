@@ -322,6 +322,6 @@ b = Board.new(cells:
   ])
 
 ##########################
-s = Solver.new(board: b)
-s.fill_in_board
-s.filled_in_board.print_rows
+# s = Solver.new(board: b)
+# s.fill_in_board
+# s.filled_in_board.print_rows

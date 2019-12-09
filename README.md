@@ -65,10 +65,13 @@ rspec solver_spec.rb
 ```
 
 ### Aspirations
-- Evolve to solve harder sudokus with more complex analytical tactics
-  - Account for advanced neighbor negation
-    - ie if only two cells in the square next door can be a 9 and they form a row
-      that negates cells in current square, that might leave one option left
+- Add final solving technique of testing possibilities to see if it will solve the puzzle
+  - If set of tests solves the puzzle, fill in board
+  - If set of tests do not solve the puzzle, go back to test inception and try other possibilities
+- Extract all solver strategies to their own separate classes
+  - Consider using a yaml config file to list all available strategies through which the solver
+    can iterate
+  - This architechture may warrant a solver helper file of common functions used for solving strategies
 - Create browser frontend
   - Interactive user interface
   - User can choose to be shown hints for individual cells
